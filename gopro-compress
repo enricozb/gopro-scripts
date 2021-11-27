@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# inspired by https://gist.github.com/noln/8ba9632775c63685e83c3534cbd83079
 
 set -e
 
 usage() {
-  echo "usage: compress INPUT OUTPUT [,][MODE = l,m,s,t]"
+  echo "usage: gopro-compress INPUT OUTPUT [,][MODE = l,m,s,t]"
   echo ",: whether or not to stabilize"
   echo "MODE: size of output (large/medium/small/tiny)"
-  echo "example: compress input.mp4 output.mp4 ,m"
+  echo "example: gopro-compress input.mp4 output.mp4 ,m"
   exit 1
 }
 
@@ -38,6 +37,8 @@ stabilize() {
 
   # additional comma is for appending the scale transform during compression
   transform="vidstabtransform=input=$tmp/vectors.trf:smoothing=20,unsharp=5:5:0.8:3:3:0.4,"
+
+  # see https://www.imakewebsites.ca/posts/2018/02/17/stabilizing-gopro-video-with-ffmpeg-and-vid.stab/
   : | ffmpeg -i "$input" -vf "vidstabdetect=stepsize=32:shakiness=10:accuracy=15:result=$tmp/vectors.trf" -f null - >"$tmp/stabilize.log" 2>&1
 }
 
@@ -67,6 +68,7 @@ compress() {
     ;;
   esac
 
+  # see https://gist.github.com/noln/8ba9632775c63685e83c3534cbd83079
   : | ffmpeg -i "$input" -vf "$transform" -c:v libx265 -crf 28 -preset fast "$output" >"$tmp/compress.log" 2>&1
 }
 
