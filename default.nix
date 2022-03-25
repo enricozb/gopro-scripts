@@ -6,5 +6,6 @@ let
   '';
 in pkgs.stdenv.mkDerivation rec {
   name = "gopro-compress";
+  dontUpack = true;
   buildInputs = [ pkgs.ffmpeg-full gopro-compress ];
 }
