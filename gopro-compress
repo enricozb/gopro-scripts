@@ -3,9 +3,9 @@
 set -e
 
 usage() {
-  echo "usage: gopro-compress INPUT OUTPUT [,][MODE = l,m,s,t]"
+  echo "usage: gopro-compress INPUT OUTPUT [,]SCALE"
   echo ",: whether or not to stabilize"
-  echo "MODE: size of output (large/medium/small/tiny)"
+  echo "SCALE: [olmst] size of output (original, large, medium, small, tiny)"
   echo "example: gopro-compress input.mp4 output.mp4 ,m"
   exit 1
 }
@@ -17,7 +17,7 @@ parseargs() {
   fi
 
   tmp=$(mktemp -d)
-  echo "$tmp"
+  echo "outputting logs to $tmp"
   input="$1"
   output="$2"
   mode="$3"
@@ -35,8 +35,7 @@ parseargs() {
 stabilize() {
   echo 'stabilizing...'
 
-  # additional comma is for appending the scale transform during compression
-  transform="vidstabtransform=input=$tmp/vectors.trf:smoothing=20,unsharp=5:5:0.8:3:3:0.4,"
+  transform="vidstabtransform=input=$tmp/vectors.trf:smoothing=20,unsharp=5:5:0.8:3:3:0.4"
 
   # see https://www.imakewebsites.ca/posts/2018/02/17/stabilizing-gopro-video-with-ffmpeg-and-vid.stab/
   : | ffmpeg -i "$input" -vf "vidstabdetect=stepsize=32:shakiness=10:accuracy=15:result=$tmp/vectors.trf" -f null - >"$tmp/stabilize.log" 2>&1
@@ -46,20 +45,22 @@ compress() {
   echo 'compressing...'
 
   case "${mode}" in
+  o) ;;
+
   l) # 2.7k / 2704p
-    transform="${transform}scale=2704:1520"
+    transform="${transform},scale=2704:1520"
     ;;
 
   m) # 1440p
-    transform="${transform}scale=1920:1440"
+    transform="${transform},scale=1920:1440"
     ;;
 
   s | '') # 1080p (default)
-    transform="${transform}scale=1920:1080"
+    transform="${transform},scale=1920:1080"
     ;;
 
   t) # 720p
-    transform="${transform}scale=1280:720"
+    transform="${transform},scale=1280:720"
     ;;
 
   *)

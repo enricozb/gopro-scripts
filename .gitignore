@@ -1,2 +1,5 @@
 *.MP4
 *.mp4
+
+.envrc
+.direnv
